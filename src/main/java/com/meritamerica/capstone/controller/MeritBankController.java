@@ -24,21 +24,17 @@ import com.meritamerica.capstone.exceptions.AccountHolderIdNotFoundException;
 import com.meritamerica.capstone.exceptions.AccountHolderNotFoundException;
 import com.meritamerica.capstone.exceptions.ExceedsCombinedBalanceLimitException;
 import com.meritamerica.capstone.models.AccountHolder;
-import com.meritamerica.capstone.models.AccountHolderContactDetails;
 import com.meritamerica.capstone.models.AuthenticationRequest;
 import com.meritamerica.capstone.models.AuthenticationResponse;
 import com.meritamerica.capstone.models.CDAccount;
 import com.meritamerica.capstone.models.CDOffering;
 import com.meritamerica.capstone.models.CheckingAccount;
 import com.meritamerica.capstone.models.SavingsAccount;
-import com.meritamerica.capstone.models.User;
-import com.meritamerica.capstone.repositories.AccountHolderContactDetailsRepository;
 import com.meritamerica.capstone.repositories.AccountHolderRepository;
 import com.meritamerica.capstone.repositories.CDAccountRepository;
 import com.meritamerica.capstone.repositories.CDOfferingRepository;
 import com.meritamerica.capstone.repositories.CheckingAccountRepository;
 import com.meritamerica.capstone.repositories.SavingsAccountRepository;
-import com.meritamerica.capstone.repositories.UserRepository;
 import com.meritamerica.capstone.services.JwtUtil;
 import com.meritamerica.capstone.services.MyUserDetailsService;
 
@@ -47,8 +43,6 @@ public class MeritBankController {
 
 	@Autowired
 	private AccountHolderRepository accountHolderRepository;
-	@Autowired
-	private AccountHolderContactDetailsRepository accountHolderContactDetailsRepository;
 	@Autowired
 	private CDAccountRepository cdAccountRepository;
 	@Autowired
@@ -60,9 +54,6 @@ public class MeritBankController {
 
 	@Autowired
 	private AuthenticationManager authenticationManager;
-
-	@Autowired
-	private UserRepository userRepository;
 
 	@Autowired
 	private MyUserDetailsService userDetailsService;
@@ -109,25 +100,28 @@ public class MeritBankController {
 		return newAct;
 	}
 
-	@PostMapping("/AccountHolders/{id}/ContactDetails")
-	@ResponseStatus(HttpStatus.CREATED)
-	public AccountHolderContactDetails addContactDetails(@PathVariable int id,
-			@RequestBody AccountHolderContactDetails contactDetails) {
-		AccountHolder act = accountHolderRepository.findById(id);
-		act.setAccountHolderContactDetails(contactDetails);
-		accountHolderContactDetailsRepository.save(contactDetails);
-		return contactDetails;
-	}
-
+	/*
+	 * revisit
+	 * 
+	 * @PostMapping("/AccountHolders/{id}/ContactDetails")
+	 * 
+	 * @ResponseStatus(HttpStatus.CREATED) public AccountHolderContactDetails
+	 * addContactDetails(@PathVariable int id,
+	 * 
+	 * @RequestBody AccountHolderContactDetails contactDetails) { AccountHolder act
+	 * = accountHolderRepository.findById(id);
+	 * act.setAccountHolderContactDetails(contactDetails);
+	 * accountHolderContactDetailsRepository.save(contactDetails); return
+	 * contactDetails; }
+	 */
 	@PostMapping("/Me/CDAccounts")
 	@ResponseStatus(HttpStatus.CREATED)
 	public CDAccount addMyCDAccount(@RequestHeader(name = "Authorization") String token,
 			@RequestBody @Valid CDAccount newAct)
 			throws ExceedsCombinedBalanceLimitException, AccountHolderIdNotFoundException {
 		token = token.substring(7);
-		User user = userRepository.findByUserName(jwtTokenUtil.extractUsername(token)).get();
-		AccountHolder act = accountHolderRepository.findById(user.getId());
-		act.addCDAccount(newAct);
+		AccountHolder accountHolder = accountHolderRepository.findByUsername(jwtTokenUtil.extractUsername(token));
+		accountHolder.addCDAccount(newAct);
 		cdAccountRepository.save(newAct);
 		return newAct;
 	}
@@ -138,12 +132,11 @@ public class MeritBankController {
 			@RequestBody @Valid CheckingAccount newAct) throws ExceedsCombinedBalanceLimitException,
 			AccountHolderIdNotFoundException, AccountHolderNotFoundException {
 		token = token.substring(7);
-		User user = userRepository.findByUserName(jwtTokenUtil.extractUsername(token)).get();
-		AccountHolder act = accountHolderRepository.findById(user.getId());
-		if (newAct.getBalance() + act.getCombinedBalance() > 250000) {
+		AccountHolder accountHolder = accountHolderRepository.findByUsername(jwtTokenUtil.extractUsername(token));
+		if (newAct.getBalance() + accountHolder.getCombinedBalance() > 250000) {
 			throw new ExceedsCombinedBalanceLimitException();
 		}
-		act.addCheckingAccount(newAct);
+		accountHolder.addCheckingAccount(newAct);
 		checkingAccountRepository.save(newAct);
 		return newAct;
 	}
@@ -154,12 +147,11 @@ public class MeritBankController {
 			@RequestBody @Valid SavingsAccount newAct) throws ExceedsCombinedBalanceLimitException,
 			AccountHolderIdNotFoundException, AccountHolderNotFoundException {
 		token = token.substring(7);
-		User user = userRepository.findByUserName(jwtTokenUtil.extractUsername(token)).get();
-		AccountHolder act = accountHolderRepository.findById(user.getId());
-		if (newAct.getBalance() + act.getCombinedBalance() > 250000) {
+		AccountHolder accountHolder = accountHolderRepository.findByUsername(jwtTokenUtil.extractUsername(token));
+		if (newAct.getBalance() + accountHolder.getCombinedBalance() > 250000) {
 			throw new ExceedsCombinedBalanceLimitException();
 		}
-		act.addSavingsAccount(newAct);
+		accountHolder.addSavingsAccount(newAct);
 		savingsAccountRepository.save(newAct);
 		return newAct;
 	}
@@ -196,8 +188,8 @@ public class MeritBankController {
 	}
 
 	@PostMapping("/authenticate/createUser")
-	public ResponseEntity<?> createUser(@RequestBody User user) {
-		userRepository.save(user);
+	public ResponseEntity<?> createUser(@RequestBody AccountHolder user) {
+		accountHolderRepository.save(user);
 		return ResponseEntity.ok(user);
 	}
 
@@ -210,10 +202,11 @@ public class MeritBankController {
 	public List<AccountHolder> getAccountHolders() {
 		return accountHolderRepository.findAll();
 	}
+
 	@DeleteMapping("/Delete/{id}")
 	public void deleteAccountHolder(@PathVariable int id) {
 		accountHolderRepository.deleteById(id);
-		//add user repository delete
+		// add AccountHolder repository delete
 	}
 
 	@GetMapping("/AccountHolders/{id}/CDAccounts")
@@ -236,70 +229,67 @@ public class MeritBankController {
 		return checkingAccountRepository.findByAccountHolder(act.getId());
 	}
 
-	@GetMapping("/AccountHolders/{id}/ContactDetails")
-	public AccountHolderContactDetails getContactDetails(@PathVariable int id) throws AccountHolderIdNotFoundException {
-		AccountHolder act = accountHolderRepository.findById(id);
-		if (act == null) {
-			throw new AccountHolderIdNotFoundException(id);
-		}
-		return accountHolderContactDetailsRepository.findByAccountHolder(act.getId());
-	}
-
+	/*
+	 * revisit
+	 * 
+	 * @GetMapping("/AccountHolders/{id}/ContactDetails") public
+	 * AccountHolderContactDetails getContactDetails(@PathVariable int id) throws
+	 * AccountHolderIdNotFoundException { AccountHolder act =
+	 * accountHolderRepository.findById(id); if (act == null) { throw new
+	 * AccountHolderIdNotFoundException(id); } return
+	 * accountHolderContactDetailsRepository.findByAccountHolder(act.getId()); }
+	 */
 	@GetMapping("/Me")
 	public AccountHolder getMyAccount(@RequestHeader(name = "Authorization") String token)
 			throws AccountHolderNotFoundException {
 		token = token.substring(7);
-		User user = userRepository.findByUserName(jwtTokenUtil.extractUsername(token)).get();
-		AccountHolder act = accountHolderRepository.findById(user.getId());
-		if (act == null) {
+		AccountHolder accountHolder = accountHolderRepository.findByUsername(jwtTokenUtil.extractUsername(token));
+		if (accountHolder == null) {
 			throw new AccountHolderNotFoundException();
 		}
-		return act;
+		return accountHolder;
 	}
 
 	@GetMapping("/Me/CDAccounts")
 	public List<CDAccount> getMyCDAccounts(@RequestHeader(name = "Authorization") String token)
 			throws AccountHolderNotFoundException {
 		token = token.substring(7);
-		User user = userRepository.findByUserName(jwtTokenUtil.extractUsername(token)).get();
-		AccountHolder act = accountHolderRepository.findById(user.getId());
-		if (act == null) {
+		AccountHolder accountHolder = accountHolderRepository.findByUsername(jwtTokenUtil.extractUsername(token));
+		if (accountHolder == null) {
 			throw new AccountHolderNotFoundException();
 		}
-		return act.getCDAccounts();
+		return accountHolder.getCDAccounts();
 	}
 
 	@GetMapping("/Me/CheckingAccounts")
 	public List<CheckingAccount> getMyCheckingAccounts(@RequestHeader(name = "Authorization") String token)
 			throws AccountHolderNotFoundException {
 		token = token.substring(7);
-		User user = userRepository.findByUserName(jwtTokenUtil.extractUsername(token)).get();
-		AccountHolder act = accountHolderRepository.findById(user.getId());
-		if (act == null) {
+		AccountHolder accountHolder = accountHolderRepository.findByUsername(jwtTokenUtil.extractUsername(token));
+		if (accountHolder == null) {
 			throw new AccountHolderNotFoundException();
 		}
-		return act.getCheckingAccounts();
+		return accountHolder.getCheckingAccounts();
 	}
 
 	@GetMapping("/Me/SavingsAccounts")
 	public List<SavingsAccount> getMySavingsAccounts(@RequestHeader(name = "Authorization") String token)
 			throws AccountHolderNotFoundException {
 		token = token.substring(7);
-		User user = userRepository.findByUserName(jwtTokenUtil.extractUsername(token)).get();
-		AccountHolder act = accountHolderRepository.findById(user.getId());
-		if (act == null) {
+		AccountHolder accountHolder = accountHolderRepository.findByUsername(jwtTokenUtil.extractUsername(token));
+		if (accountHolder == null) {
 			throw new AccountHolderNotFoundException();
 		}
-		return act.getSavingsAccounts();
+		return accountHolder.getSavingsAccounts();
 	}
 
 	@GetMapping("/AccountHolders/{id}/SavingsAccounts")
 	public List<SavingsAccount> getSavingsAccountsByID(@PathVariable int id) throws AccountHolderIdNotFoundException {
-		AccountHolder act = accountHolderRepository.findById(id);
-		if (act == null) {
+		AccountHolder accountHolder = accountHolderRepository.findById(id);
+		if (accountHolder == null) {
 			throw new AccountHolderIdNotFoundException(id);
 		}
-		return savingsAccountRepository.findByAccountHolder(act.getId());
+		return savingsAccountRepository.findByAccountHolder(accountHolder.getId());
 	}
 
 }

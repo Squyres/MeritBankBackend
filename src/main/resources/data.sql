@@ -1,1 +1,3 @@
-INSERT INTO USER (ID, ACTIVE, PASSWORD, ROLES, USER_NAME) VALUES (100, TRUE, 'admin', 'admin', 'admin');
+INSERT INTO account_holder(id, username, password, authority, active, value) 
+	VALUES(0, 'admin', 'admin', 'ADMIN', TRUE, 0)
+	ON DUPLICATE KEY UPDATE authority = 'ADMIN';

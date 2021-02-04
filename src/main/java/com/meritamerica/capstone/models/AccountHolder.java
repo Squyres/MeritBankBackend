@@ -17,12 +17,10 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotBlank;
 
 @Entity
-@Table(name = "accountholders")
-public class AccountHolder implements Comparable<AccountHolder> {
+public class AccountHolder {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "seq")
-	@Column(name = "user_id")
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private int id;
 	@NotBlank
 	private String firstName;
@@ -35,16 +33,36 @@ public class AccountHolder implements Comparable<AccountHolder> {
 	List<CheckingAccount> checkingArray;
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "ah")
 	List<SavingsAccount> savingsArray;
-	@OneToOne(cascade = CascadeType.ALL)
-	@JoinColumn(name = "user_id", referencedColumnName = "id")
-	private AccountHolderContactDetails accountHolderContactDetails;
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "ah")
 	List<CDAccount> cdAccountArray;
+	private String username;
+	private String password;
+	private String authority;
+	private String email;
+	private String phone;
+	private String address;
+	private String city;
+	private String state;
+	private String zip;
+	private double value;
+	private boolean active;
 
 	public AccountHolder() {
 		checkingArray = new ArrayList<CheckingAccount>();
 		savingsArray = new ArrayList<SavingsAccount>();
 		cdAccountArray = new ArrayList<CDAccount>();
+	}
+
+	public double getValue() {
+		return value;
+	}
+
+	public void setValue(double value) {
+		this.value = value;
+	}
+
+	public void setActive(boolean active) {
+		this.active = active;
 	}
 
 	public boolean addCDAccount(CDAccount cdAccount) {
@@ -72,19 +90,6 @@ public class AccountHolder implements Comparable<AccountHolder> {
 		savingsArray.add(savingsAccount);
 		savingsAccount.setAccountHolder(this.id);
 		return true;
-	}
-
-	@Override
-	public int compareTo(AccountHolder account) {
-		if (this.getCombinedBalance() > account.getCombinedBalance()) {
-			return 1;
-		} else {
-			return -1;
-		}
-	}
-
-	public AccountHolderContactDetails getAccountHolderContactDetails() {
-		return accountHolderContactDetails;
 	}
 
 	public List<CDAccount> getCDAccounts() {
@@ -160,8 +165,84 @@ public class AccountHolder implements Comparable<AccountHolder> {
 		return ssn;
 	}
 
-	public void setAccountHolderContactDetails(AccountHolderContactDetails accountHolderContactDetails) {
-		this.accountHolderContactDetails = accountHolderContactDetails;
+	public String getSsn() {
+		return ssn;
+	}
+
+	public void setSsn(String ssn) {
+		this.ssn = ssn;
+	}
+
+	public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public String getAuthority() {
+		return authority;
+	}
+
+	public void setAuthority(String authority) {
+		this.authority = authority;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public String getPhone() {
+		return phone;
+	}
+
+	public void setPhone(String phone) {
+		this.phone = phone;
+	}
+
+	public String getAddress() {
+		return address;
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
+	}
+
+	public String getCity() {
+		return city;
+	}
+
+	public void setCity(String city) {
+		this.city = city;
+	}
+
+	public String getState() {
+		return state;
+	}
+
+	public void setState(String state) {
+		this.state = state;
+	}
+
+	public String getZip() {
+		return zip;
+	}
+
+	public void setZip(String zip) {
+		this.zip = zip;
 	}
 
 	public void setFirstName(String first) {
@@ -187,6 +268,11 @@ public class AccountHolder implements Comparable<AccountHolder> {
 	@Override
 	public String toString() {
 		return "Combined Balance for Account Holder" + this.getCombinedBalance();
+	}
+
+	public boolean isActive() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }

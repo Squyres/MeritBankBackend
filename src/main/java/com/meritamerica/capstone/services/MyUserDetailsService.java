@@ -1,28 +1,45 @@
 package com.meritamerica.capstone.services;
 
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
+import com.meritamerica.capstone.models.AccountHolder;
 import com.meritamerica.capstone.models.MyUserDetails;
-import com.meritamerica.capstone.models.User;
-import com.meritamerica.capstone.repositories.UserRepository;
+import com.meritamerica.capstone.repositories.AccountHolderRepository;
 
 @Service
 public class MyUserDetailsService implements UserDetailsService {
 
 	@Autowired
-	UserRepository userRepository;
+	AccountHolderRepository accountHolderRepository;
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		Optional<User> user = userRepository.findByUserName(username);
 
-		user.orElseThrow(() -> new UsernameNotFoundException("User not found."));
-		return user.map(MyUserDetails::new).get();
+		AccountHolder accountHolder = accountHolderRepository.findByUsername(username);
+
+		if (accountHolder != null) {
+			if (!accountHolder.isActive()) {
+				return null;
+			}
+			String userLevel = accountHolder.getAuthority();
+			Set<SimpleGrantedAuthority> authorities = new HashSet<>();
+			authorities.add(new SimpleGrantedAuthority(userLevel));
+
+			return new User(username, accountHolder.getPassword(), authorities);
+		}
+
+		return null;
 	}
 }

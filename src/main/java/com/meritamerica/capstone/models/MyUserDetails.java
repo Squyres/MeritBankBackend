@@ -18,10 +18,10 @@ public class MyUserDetails implements UserDetails {
 		this.userName = userName;
 	}
 
-	public MyUserDetails(User user) {
-		this.userName = user.getUserName();
+	public MyUserDetails(AccountHolder user) {
+		this.userName = user.getUsername();
 		this.password = user.getPassword();
-		this.authorities = Arrays.stream(user.getRoles().split(",")).map(SimpleGrantedAuthority::new)
+		this.authorities = Arrays.stream(user.getAuthority().split(",")).map(SimpleGrantedAuthority::new)
 				.collect(Collectors.toList());
 	}
 
