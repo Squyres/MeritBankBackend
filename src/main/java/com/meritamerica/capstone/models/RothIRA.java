@@ -3,15 +3,14 @@ package com.meritamerica.capstone.models;
 import javax.persistence.Entity;
 
 @Entity
-public class CheckingAccount extends BankAccount {
+public class RothIRA extends IRAAccount {
+	static final double DEFAULT_INTEREST_RATE = 0;
 
-	static final double DEFAULT_INTEREST_RATE = .0001;
-
-	public CheckingAccount() {
+	public RothIRA() {
 		super();
 		super.setInterestRate(DEFAULT_INTEREST_RATE);
 		super.setMaxAccounts(1);
-		setAccountName("Checking Account");
+		setAccountName("Roth IRA Account");
 	}
 
 }

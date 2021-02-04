@@ -1,44 +1,26 @@
 package com.meritamerica.capstone.models;
 
-import java.util.Date;
-
 import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
+
+import com.meritamerica.capstone.exceptions.CannotCloseAccountException;
+import com.meritamerica.capstone.exceptions.ExceedsAvailableBalanceException;
+import com.meritamerica.capstone.exceptions.NegativeAmountException;
 
 @Entity
 public class SavingsAccount extends BankAccount {
 
-	public static final double INTEREST_RATE = 0.01;
-
-	@ManyToOne
-	private AccountHolder ah;
-	private int accountHolder;
+	static final double DEFAULT_INTEREST_RATE = .01;
 
 	public SavingsAccount() {
-		this.balance = 0;
-		this.interestRate = INTEREST_RATE;
-	}
-
-	public SavingsAccount(double openBalance, double interestRate) {
-		super(openBalance, interestRate);
-	}
-
-	public SavingsAccount(long accountNumber, double openBalance, double interestRate, Date accountOpenedOn) {
-		super(accountNumber, openBalance, interestRate, accountOpenedOn);
-	}
-
-	public int getAccountHolder() {
-		return this.accountHolder;
-	}
-
-	public void setAccountHolder(int actId) {
-		this.accountHolder = actId;
+		super();
+		super.setInterestRate(DEFAULT_INTEREST_RATE);
+		super.setMaxAccounts(1);
+		setAccountName("Savings Account");
 	}
 
 	@Override
-	public String toString() {
-		return "Savings Account Balance: $" + balance + "\n" + "Savings Account Interest Rate: " + INTEREST_RATE + "\n"
-				+ "Savings Account Balance in 3 years: $" + futureValue(3);
-
+	public Transaction closeAccount(AccountHolder user)
+			throws ExceedsAvailableBalanceException, NegativeAmountException, CannotCloseAccountException {
+		throw new CannotCloseAccountException();
 	}
 }

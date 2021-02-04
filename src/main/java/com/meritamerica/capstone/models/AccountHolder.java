@@ -4,17 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
-import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
 import javax.validation.constraints.NotBlank;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.meritamerica.capstone.exceptions.MaxAccountsReachedException;
 
 @Entity
 public class AccountHolder {
@@ -30,11 +28,7 @@ public class AccountHolder {
 	@NotBlank
 	private String ssn;
 	@OneToMany(cascade = CascadeType.ALL)
-	List<CheckingAccount> checkingArray;
-	@OneToMany(cascade = CascadeType.ALL)
-	List<SavingsAccount> savingsArray;
-	@OneToMany(cascade = CascadeType.ALL)
-	List<CDAccount> cdAccountArray;
+	private List<BankAccount> bankAccounts;
 	private String username;
 	private String password;
 	private String authority;
@@ -46,78 +40,124 @@ public class AccountHolder {
 	private String zip;
 	private double value;
 	private boolean active;
+	private String closedAccounts;
 
-	public AccountHolder() {
-		checkingArray = new ArrayList<CheckingAccount>();
-		savingsArray = new ArrayList<SavingsAccount>();
-		cdAccountArray = new ArrayList<CDAccount>();
-	}
+	public BankAccount addBankAccount(BankAccount bankAccount) throws MaxAccountsReachedException {
 
-	public double getValue() {
-		return value;
-	}
-
-	public void setValue(double value) {
-		this.value = value;
-	}
-
-	public void setActive(boolean active) {
-		this.active = active;
-	}
-
-	public boolean addCDAccount(CDAccount cdAccount) {
-		if (cdAccount == null) {
-			return false;
+		if (bankAccount.getBalance() < 0) {
+			System.out.println("Can't Deposit Negative Amount");
 		}
-		cdAccountArray.add(cdAccount);
-		cdAccount.setAccountHolder(this.id);
-		return true;
-	}
-
-	public boolean addCheckingAccount(CheckingAccount checkingAccount) {
-		if (checkingAccount == null) {
-			return false;
+		if (bankAccount.getMaxAccounts() > 0
+				&& getNumberOfAccountsByType(bankAccount) >= bankAccount.getMaxAccounts()) {
+			throw new MaxAccountsReachedException();
 		}
-		checkingArray.add(checkingAccount);
-		checkingAccount.setAccountHolder(this.id);
-		return true;
+
+		bankAccounts.add(bankAccount);
+		return bankAccount;
 	}
 
-	public boolean addSavingsAccount(SavingsAccount savingsAccount) {
-		if (savingsAccount == null) {
-			return false;
+	public String getAddress() {
+		return address;
+	}
+
+	public double getAllAvailableBalance() {
+		double sum = 0;
+
+		sum += getBalanceByType(new CheckingAccount());
+		sum += getBalanceByType(new SavingsAccount());
+		sum += getBalanceByType(new DBACheckingAccount());
+
+		double penSum = getBalanceByType(new RegularIRA());
+		penSum += getBalanceByType(new RothIRA());
+		penSum += getBalanceByType(new RolloverIRA());
+
+		penSum /= 1.2;
+		penSum = Math.floor(penSum * 100);
+		penSum /= 100;
+
+		return (sum + penSum);
+	}
+
+	public String getAuthority() {
+		return authority;
+	}
+
+	public double getBalanceByType(BankAccount type) {
+		double sum = 0;
+		for (BankAccount b : bankAccounts) {
+			if (b.getClass() == type.getClass() && b.isActive()) {
+				sum += b.getBalance();
+			}
 		}
-		savingsArray.add(savingsAccount);
-		savingsAccount.setAccountHolder(this.id);
-		return true;
+		return sum;
 	}
 
-	public List<CDAccount> getCDAccounts() {
-		return cdAccountArray;
-	}
-
-	public double getCDBalance() {
-		double total = 0.0;
-		for (CDAccount balance : cdAccountArray) {
-			total += balance.getBalance();
+	public List<BankAccount> getBankAccounts() {
+		List<BankAccount> ba = new ArrayList<BankAccount>();
+		for (BankAccount b : this.bankAccounts) {
+			if (b.isActive()) {
+				ba.add(b);
+			}
 		}
-		return total;
+		return ba;
 	}
 
-	public List<CheckingAccount> getCheckingAccounts() {
-		return checkingArray;
-	}
-
-	public double getCheckingBalance() {
-		double total = 0.0;
-		for (CheckingAccount balance : checkingArray) {
-			total += balance.getBalance();
+	public List<BankAccount> getCDAccount() {
+		List<BankAccount> accounts = new ArrayList<>();
+		for (BankAccount b : this.bankAccounts) {
+			if (b instanceof CDAccount && b.isActive()) {
+				accounts.add(b);
+			}
 		}
-		return total;
+		return accounts;
+	}
+
+	public List<BankAccount> getCheckingAccounts() {
+		List<BankAccount> accounts = new ArrayList<>();
+		for (BankAccount b : this.bankAccounts) {
+			if (b instanceof CheckingAccount && b.isActive()) {
+				accounts.add(b);
+			}
+		}
+		return accounts;
+	}
+
+	public String getCity() {
+		return city;
+	}
+
+	public String getClosedAccounts() {
+		if (closedAccounts == null) {
+			return "";
+		}
+		return closedAccounts;
 	}
 
 	public double getCombinedBalance() {
-		return getCDBalance() + getSavingsBalance() + getCheckingBalance();
+
+		double sum = 0;
+		sum += getBalanceByType(new CheckingAccount());
+		sum += getBalanceByType(new SavingsAccount());
+		sum += getBalanceByType(new CDAccount());
+		sum += getBalanceByType(new DBACheckingAccount());
+		sum += getBalanceByType(new RegularIRA());
+		sum += getBalanceByType(new RothIRA());
+		sum += getBalanceByType(new RolloverIRA());
+		return sum;
+	}
+
+	public List<BankAccount> getDBACheckingAccounts() {
+		List<BankAccount> accounts = new ArrayList<>();
+		for (BankAccount b : this.bankAccounts) {
+			if (b instanceof DBACheckingAccount && b.isActive()) {
+				accounts.add(b);
+			}
+		}
+		return accounts;
+	}
+
+	public String getEmail() {
+		return email;
 	}
 
 	public String getFirstName() {
@@ -128,6 +168,16 @@ public class AccountHolder {
 		return id;
 	}
 
+	public List<BankAccount> getInactiveBankAccounts() {
+		List<BankAccount> ba = new ArrayList<BankAccount>();
+		for (BankAccount b : this.bankAccounts) {
+			if (!b.isActive()) {
+				ba.add(b);
+			}
+		}
+		return ba;
+	}
+
 	public String getLastName() {
 		return lastName;
 	}
@@ -136,142 +186,141 @@ public class AccountHolder {
 		return middleName;
 	}
 
-	public int getNumberOfCDAccounts() {
-		return cdAccountArray.size();
-	}
-
-	public int getNumberOfCheckingAccounts() {
-		return checkingArray.size();
-	}
-
-	public int getNumberOfSavingsAccounts() {
-		return savingsArray.size();
-	}
-
-	public List<SavingsAccount> getSavingsAccounts() {
-		return savingsArray;
-	}
-
-	public double getSavingsBalance() {
-		double total = 0.0;
-		for (SavingsAccount balance : savingsArray) {
-			total += balance.getBalance();
+	public int getNumberOfAccountsByType(BankAccount type) {
+		int sum = 0;
+		for (BankAccount b : this.bankAccounts) {
+			if (b.getClass() == type.getClass() && b.isActive()) {
+				sum++;
+			}
 		}
-		return total;
-
-	}
-
-	public String getSSN() {
-		return ssn;
-	}
-
-	public String getSsn() {
-		return ssn;
-	}
-
-	public void setSsn(String ssn) {
-		this.ssn = ssn;
-	}
-
-	public String getUsername() {
-		return username;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
+		return sum;
 	}
 
 	public String getPassword() {
 		return password;
 	}
 
-	public void setPassword(String password) {
-		this.password = password;
-	}
-
-	public String getAuthority() {
-		return authority;
-	}
-
-	public void setAuthority(String authority) {
-		this.authority = authority;
-	}
-
-	public String getEmail() {
-		return email;
-	}
-
-	public void setEmail(String email) {
-		this.email = email;
-	}
-
 	public String getPhone() {
 		return phone;
 	}
 
-	public void setPhone(String phone) {
-		this.phone = phone;
+	public List<BankAccount> getSavingsAccount() {
+		List<BankAccount> accounts = new ArrayList<>();
+		for (BankAccount b : this.bankAccounts) {
+			if (b instanceof SavingsAccount && b.isActive()) {
+				accounts.add(b);
+			}
+		}
+		return accounts;
 	}
 
-	public String getAddress() {
-		return address;
+	@JsonIgnore
+	public BankAccount getSingleSavingsAccount() {
+		return getSavingsAccount().get(0);
 	}
 
-	public void setAddress(String address) {
-		this.address = address;
-	}
-
-	public String getCity() {
-		return city;
-	}
-
-	public void setCity(String city) {
-		this.city = city;
+	public String getSsn() {
+		return ssn;
 	}
 
 	public String getState() {
 		return state;
 	}
 
-	public void setState(String state) {
-		this.state = state;
+	public String getUsername() {
+		return username;
+	}
+
+	public double getValue() {
+		return value;
 	}
 
 	public String getZip() {
 		return zip;
 	}
 
-	public void setZip(String zip) {
-		this.zip = zip;
+	public boolean isActive() {
+		return active;
 	}
 
-	public void setFirstName(String first) {
-		this.firstName = first;
+	public void setActive(boolean isActive) {
+		this.active = isActive;
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
+	}
+
+	public void setAuthority(String authority) {
+		this.authority = authority;
+	}
+
+	public void setBankAccounts(List<BankAccount> bankAccounts) {
+		this.bankAccounts = bankAccounts;
+	}
+
+	public void setCity(String city) {
+		this.city = city;
+	}
+
+	public void setClosedAccounts(String closedAccounts) {
+		this.closedAccounts = closedAccounts;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
 	}
 
 	public void setId(int id) {
 		this.id = id;
 	}
 
-	public void setLastName(String last) {
-		this.lastName = last;
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
 	}
 
-	public void setMiddleName(String middle) {
-		this.middleName = middle;
+	public void setMiddleName(String middleName) {
+		this.middleName = middleName;
 	}
 
-	public void setSSN(String ssn) {
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public void setPhone(String phone) {
+		this.phone = phone;
+	}
+
+	public void setSsn(String ssn) {
 		this.ssn = ssn;
 	}
 
-	@Override
-	public String toString() {
-		return "Combined Balance for Account Holder" + this.getCombinedBalance();
+	public void setState(String state) {
+		this.state = state;
 	}
 
-	public boolean isActive() {
-		return active;
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public void setValue(double value) {
+		this.value = value;
+	}
+
+	public void setZip(String zip) {
+		this.zip = zip;
+	}
+
+	public void updateContactInfo(AccountHolder temp) {
+		this.address = temp.getAddress();
+		this.city = temp.getCity();
+		this.zip = temp.getZip();
+		this.phone = temp.getPhone();
+		this.email = temp.getEmail();
 	}
 
 }

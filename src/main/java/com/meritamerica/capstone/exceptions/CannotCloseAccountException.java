@@ -4,13 +4,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.BAD_REQUEST)
-public class NegativeAmountException extends Exception {
+public class CannotCloseAccountException extends Exception {
 
-	public NegativeAmountException() {
-		super("Negative amount not allowed");
+	public CannotCloseAccountException() {
+		super("Unable to close Savings Account.");
 	}
 
-	public NegativeAmountException(String msg) {
+	public CannotCloseAccountException(String msg) {
 		super(msg);
 	}
+
 }

@@ -3,15 +3,15 @@ package com.meritamerica.capstone.models;
 import javax.persistence.Entity;
 
 @Entity
-public class CheckingAccount extends BankAccount {
+public class RolloverIRA extends IRAAccount {
+	static final double DEFAULT_INTEREST_RATE = 0;
 
-	static final double DEFAULT_INTEREST_RATE = .0001;
-
-	public CheckingAccount() {
+	public RolloverIRA() {
 		super();
 		super.setInterestRate(DEFAULT_INTEREST_RATE);
 		super.setMaxAccounts(1);
-		setAccountName("Checking Account");
+		setAccountName("Rollover IRA Account");
+
 	}
 
 }

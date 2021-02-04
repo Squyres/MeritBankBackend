@@ -14,15 +14,15 @@ public class MyUserDetails implements UserDetails {
 	private String password;
 	private List<GrantedAuthority> authorities;
 
-	public MyUserDetails(String userName) {
-		this.userName = userName;
-	}
-
 	public MyUserDetails(AccountHolder user) {
 		this.userName = user.getUsername();
 		this.password = user.getPassword();
 		this.authorities = Arrays.stream(user.getAuthority().split(",")).map(SimpleGrantedAuthority::new)
 				.collect(Collectors.toList());
+	}
+
+	public MyUserDetails(String userName) {
+		this.userName = userName;
 	}
 
 	@Override
