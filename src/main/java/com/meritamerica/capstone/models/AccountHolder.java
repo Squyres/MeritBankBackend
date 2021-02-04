@@ -29,11 +29,11 @@ public class AccountHolder {
 	private String lastName;
 	@NotBlank
 	private String ssn;
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "ah")
+	@OneToMany(cascade = CascadeType.ALL)
 	List<CheckingAccount> checkingArray;
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "ah")
+	@OneToMany(cascade = CascadeType.ALL)
 	List<SavingsAccount> savingsArray;
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "ah")
+	@OneToMany(cascade = CascadeType.ALL)
 	List<CDAccount> cdAccountArray;
 	private String username;
 	private String password;
@@ -271,8 +271,7 @@ public class AccountHolder {
 	}
 
 	public boolean isActive() {
-		// TODO Auto-generated method stub
-		return false;
+		return active;
 	}
 
 }

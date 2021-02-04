@@ -49,7 +49,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 				.antMatchers("/Me/**", "/Me").hasAuthority("AccountHolder").antMatchers(HttpMethod.POST, "/CDOfferings")
 				.hasAuthority("admin").antMatchers(HttpMethod.GET, "/CDOfferings")
 				.hasAnyAuthority("admin", "AccountHolder").antMatchers("/authenticate/createUser").hasAuthority("admin")
-				.antMatchers("/authenticate", "/authenticate/").permitAll().anyRequest().authenticated().and()
+				.antMatchers("/login", "/login/").permitAll().anyRequest().authenticated().and()
 				.exceptionHandling().and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
 		httpSecurity.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);

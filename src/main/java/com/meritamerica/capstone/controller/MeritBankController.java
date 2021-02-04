@@ -169,7 +169,7 @@ public class MeritBankController {
 		return newAct;
 	}
 
-	@PostMapping("/authenticate")
+	@PostMapping("/login")
 	public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest)
 			throws Exception {
 
