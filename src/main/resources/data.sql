@@ -1,0 +1,1 @@
+INSERT INTO USER (ID, ACTIVE, PASSWORD, ROLES, USER_NAME) VALUES (100, TRUE, 'admin', 'admin', 'admin');
