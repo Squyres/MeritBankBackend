@@ -42,6 +42,11 @@ public class AccountHolder {
 	private boolean active;
 	private String closedAccounts;
 
+	public AccountHolder() {
+		bankAccounts = new ArrayList<>();
+		this.active = true;
+	}
+
 	public BankAccount addBankAccount(BankAccount bankAccount) throws MaxAccountsReachedException {
 
 		if (bankAccount.getBalance() < 0) {
