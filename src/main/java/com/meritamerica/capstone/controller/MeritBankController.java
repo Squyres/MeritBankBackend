@@ -563,6 +563,31 @@ public class MeritBankController {
 			throw new IllegalArgumentException();
 		}
 	}
+	@GetMapping("Me/Balance/{t}")
+	public double getBalanceByAccountType(@RequestHeader("Authorization") String auth,
+			@PathVariable(name = "t") String t) throws NotFoundException, IllegalArgumentException {
+
+		AccountHolder user = findUser(auth);
+
+		switch (t) {
+		case "CDAccount":
+			return user.getBalanceByType(new CDAccount());
+		case "CheckingAccount":
+			return user.getBalanceByType(new CheckingAccount());
+		case "DBACheckingAccount":
+			return user.getBalanceByType(new DBACheckingAccount());
+		case "RegularIRA":
+			return user.getBalanceByType(new RegularIRA());
+		case "RolloverIRA":
+			return user.getBalanceByType(new RolloverIRA());
+		case "RothIRA":
+			return user.getBalanceByType(new RothIRA());
+		case "SavingsAccount":
+			return user.getBalanceByType(new SavingsAccount());
+		default:
+			throw new IllegalArgumentException();
+		}
+	}
 
 	public List<BankAccount> getBankAccounts(AccountHolder user, BankAccount t) throws NotFoundException {
 		List<BankAccount> a = bankAccountRepository.findByUserId(user.getId());
