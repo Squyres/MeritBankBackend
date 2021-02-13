@@ -27,8 +27,8 @@ public abstract class BankAccount {
 	private int accountNumber;
 	@Min(value = 0)
 	private double balance;
-	@DecimalMin(value = "0.0", inclusive = false, message = "Interest rate must be > 0")
-	@DecimalMax(value = "1.0", inclusive = false, message = "Interest rate must be < 1")
+	@DecimalMin(value = "0.0", inclusive = true, message = "Interest rate must be > 0")
+	@DecimalMax(value = "1.0", inclusive = true, message = "Interest rate must be < 1")
 	private double interestRate;
 	Date accountOpenedOn;
 	private int term;
