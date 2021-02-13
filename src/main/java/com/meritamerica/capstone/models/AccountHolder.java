@@ -161,6 +161,36 @@ public class AccountHolder {
 		return accounts;
 	}
 
+	public List<BankAccount> getRothIRA() {
+		List<BankAccount> accounts = new ArrayList<>();
+		for (BankAccount b : this.bankAccounts) {
+			if (b instanceof RothIRA && b.isActive()) {
+				accounts.add(b);
+			}
+		}
+		return accounts;
+	}
+
+	public List<BankAccount> getRolloverIRA() {
+		List<BankAccount> accounts = new ArrayList<>();
+		for (BankAccount b : this.bankAccounts) {
+			if (b instanceof RolloverIRA && b.isActive()) {
+				accounts.add(b);
+			}
+		}
+		return accounts;
+	}
+
+	public List<BankAccount> getRegularIRA() {
+		List<BankAccount> accounts = new ArrayList<>();
+		for (BankAccount b : this.bankAccounts) {
+			if (b instanceof RegularIRA && b.isActive()) {
+				accounts.add(b);
+			}
+		}
+		return accounts;
+	}
+
 	public String getEmail() {
 		return email;
 	}
